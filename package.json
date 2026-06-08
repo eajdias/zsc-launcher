@@ -1,0 +1,25 @@
+{
+  "name": "@eajdias/zscan-run",
+  "version": "1.0.0",
+  "description": "Zscan Generic Public Launcher",
+  "main": "bin/run.cjs",
+  "bin": {
+    "zscan-run": "bin/run.cjs"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "tar": "^7.5.16"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "@types/tar": "^6.1.13",
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.3"
+  }
+}
