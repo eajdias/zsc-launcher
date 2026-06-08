@@ -5,35 +5,35 @@ import * as child_process from 'child_process';
 import * as tar from 'tar';
 
 // Configuration
-const HUB_API_URL = process.env.LAUNCHER_HUB_URL || 'https://api.yourdomain.com/v1/download';
+const HUB_API_URL = process.env.ZSCAN_HUB_URL || 'https://api.zscan.com/v1/download';
 
 async function main() {
   const args = process.argv.slice(2);
   const product = args[0];
 
   if (!product) {
-    console.error('❌ Error: Product ID is missing. Usage: npx <your-launcher-pkg> <product-id>');
+    console.error('❌ Error: Product ID is missing. Usage: npx @eajdias/zscan-run <product-id>');
     process.exit(1);
   }
 
   // Determine which env var to look for based on product, or use a generic one
-  const licenseEnvKey = `LAUNCHER_${product.toUpperCase().replace(/-/g, '_')}_LICENSE_KEY`;
-  const license = process.env[licenseEnvKey] || process.env.LAUNCHER_LICENSE_KEY;
+  const licenseEnvKey = `ZSCAN_${product.toUpperCase().replace(/-/g, '_')}_LICENSE_KEY`;
+  const license = process.env[licenseEnvKey] || process.env.ZSCAN_LICENSE_KEY;
 
   if (!license) {
-    console.error(`❌ Error: Missing license key. Please set the ${licenseEnvKey} or LAUNCHER_LICENSE_KEY environment variable.`);
+    console.error(`❌ Error: Missing license key. Please set the ${licenseEnvKey} or ZSCAN_LICENSE_KEY environment variable.`);
     process.exit(1);
   }
 
   if (HUB_API_URL.startsWith('http://') && !HUB_API_URL.includes('localhost')) {
-    console.warn('⚠️ Warning: Using insecure HTTP connection for Launcher Hub API.');
+    console.warn('⚠️ Warning: Using insecure HTTP connection for Zscan Hub API.');
   }
 
-  console.log(`🚀 Launcher: Initializing product '${product}'...`);
+  console.log(`🚀 Zscan Launcher: Initializing product '${product}'...`);
 
   try {
     // 1. Authenticate and Download via Stream
-    console.log(`📡 Requesting payload from Launcher Hub...`);
+    console.log(`📡 Requesting payload from Zscan Hub...`);
     const authUrl = `${HUB_API_URL}?product=${encodeURIComponent(product)}`;
     
     const tgzResponse = await fetch(authUrl, {
@@ -63,7 +63,7 @@ async function main() {
     }
 
     // 2. Prepare temporary directory
-    const tmpDirPrefix = path.join(os.tmpdir(), `launcher-${product}-`);
+    const tmpDirPrefix = path.join(os.tmpdir(), `zscan-${product}-`);
     const extractDir = fs.mkdtempSync(tmpDirPrefix);
     
     // 3. Extract via stream
@@ -113,11 +113,11 @@ async function main() {
     
     // Environment Variable Handling
     // As a generic launcher, we default to passing the full process.env so any product works natively.
-    // For strict security, users can define LAUNCHER_FORWARD_ENV="VAR1,VAR2" to explicitly allowlist vars.
+    // For strict security, users can define ZSCAN_FORWARD_ENV="VAR1,VAR2" to explicitly allowlist vars.
     let childEnv = process.env;
 
-    if (process.env.LAUNCHER_FORWARD_ENV) {
-      const allowedKeys = process.env.LAUNCHER_FORWARD_ENV.split(',').map(k => k.trim());
+    if (process.env.ZSCAN_FORWARD_ENV) {
+      const allowedKeys = process.env.ZSCAN_FORWARD_ENV.split(',').map(k => k.trim());
       
       const safeEnv: Record<string, string | undefined> = {
         PATH: process.env.PATH,
@@ -131,9 +131,9 @@ async function main() {
         }
       }
 
-      // Always forward LAUNCHER_ prefixed configuration variables
+      // Always forward ZSCAN_ prefixed configuration variables
       for (const key in process.env) {
-        if (key.startsWith('LAUNCHER_') && !safeEnv[key]) {
+        if (key.startsWith('ZSCAN_') && !safeEnv[key]) {
           safeEnv[key] = process.env[key];
         }
       }
@@ -157,7 +157,7 @@ async function main() {
     }
 
   } catch (error: any) {
-    console.error(`\n❌ Launcher Error:`);
+    console.error(`\n❌ Zscan Launcher Error:`);
     console.error(error.message);
     process.exit(1);
   }
