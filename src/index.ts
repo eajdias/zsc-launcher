@@ -5,8 +5,7 @@ import * as child_process from 'child_process';
 import * as tar from 'tar';
 
 // Configuration
-// Using localhost for local validation loop testing
-const HUB_API_URL = 'http://localhost:3001/api/v1/download';
+const HUB_API_URL = process.env.ZSCAN_HUB_URL || 'https://api.zscan.com/v1/download';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -26,14 +25,22 @@ async function main() {
     process.exit(1);
   }
 
+  if (HUB_API_URL.startsWith('http://') && !HUB_API_URL.includes('localhost')) {
+    console.warn('⚠️ Warning: Using insecure HTTP connection for Zscan Hub API.');
+  }
+
   console.log(`🚀 Zscan Launcher: Initializing product '${product}'...`);
 
   try {
     // 1. Authenticate and Download via Stream
     console.log(`📡 Requesting payload from Zscan Hub...`);
-    const authUrl = `${HUB_API_URL}?product=${encodeURIComponent(product)}&token=${encodeURIComponent(license)}`;
+    const authUrl = `${HUB_API_URL}?product=${encodeURIComponent(product)}`;
     
-    const tgzResponse = await fetch(authUrl);
+    const tgzResponse = await fetch(authUrl, {
+      headers: {
+        'Authorization': `Bearer ${license}`
+      }
+    });
     
     if (!tgzResponse.ok) {
       let errorMsg = tgzResponse.statusText;
@@ -104,9 +111,39 @@ async function main() {
     // Pass the remaining arguments to the underlying process
     const childArgs = args.slice(1);
     
+    // Environment Variable Handling
+    // As a generic launcher, we default to passing the full process.env so any product works natively.
+    // For strict security, users can define ZSCAN_FORWARD_ENV="VAR1,VAR2" to explicitly allowlist vars.
+    let childEnv = process.env;
+
+    if (process.env.ZSCAN_FORWARD_ENV) {
+      const allowedKeys = process.env.ZSCAN_FORWARD_ENV.split(',').map(k => k.trim());
+      
+      const safeEnv: Record<string, string | undefined> = {
+        PATH: process.env.PATH,
+        NODE_ENV: process.env.NODE_ENV,
+        [licenseEnvKey]: license
+      };
+
+      for (const key of allowedKeys) {
+        if (process.env[key] !== undefined) {
+          safeEnv[key] = process.env[key];
+        }
+      }
+
+      // Always forward ZSCAN_ prefixed configuration variables
+      for (const key in process.env) {
+        if (key.startsWith('ZSCAN_') && !safeEnv[key]) {
+          safeEnv[key] = process.env[key];
+        }
+      }
+
+      childEnv = safeEnv as NodeJS.ProcessEnv;
+    }
+
     child_process.execSync(`node "${executablePath}" ${childArgs.join(' ')}`, {
       stdio: 'inherit',
-      env: process.env // Pass current environment variables (including license) down
+      env: childEnv
     });
 
     // Note: We don't automatically clean up the temp dir immediately if the process is meant to stay alive
