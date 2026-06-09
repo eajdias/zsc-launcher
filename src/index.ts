@@ -146,14 +146,22 @@ async function main() {
       shell: process.platform === 'win32' // Use shell on Windows for better compatibility
     });
 
-    if (result.error) {
-      throw result.error;
-    }
-
+    // Clean up temporary directory after the child process exits
     try {
-      fs.rmSync(extractDir, { recursive: true, force: true });
+      // On Windows, sometimes files are still locked for a split second after exit
+      if (process.platform === 'win32') {
+        setTimeout(() => {
+          try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch (e) {}
+        }, 1000).unref();
+      } else {
+        fs.rmSync(extractDir, { recursive: true, force: true });
+      }
     } catch (e) {
       // Ignore cleanup errors
+    }
+
+    if (result.error) {
+      throw result.error;
     }
 
     if (result.status !== null && result.status !== 0) {
