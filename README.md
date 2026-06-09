@@ -46,7 +46,10 @@ O binário final será gerado em `bin/run.cjs`.
 - `src/index.ts`: Lógica principal de download, extração e execução.
 - `bin/run.cjs`: Bundle compilado pronto para distribuição.
 
-Consulte o [**Quick Start**](docs/quick-start.md) para detalhes de contribuição.
+Consulte a documentação detalhada:
+- [**Guia de Uso**](docs/usage.md): Configurações avançadas, variáveis de ambiente e segurança.
+- [**Guia de Publicação**](docs/publish.md): Como compilar e publicar novas versões.
+- [**Quick Start**](docs/quick-start.md): Detalhes de contribuição e desenvolvimento.
 
 ---
 

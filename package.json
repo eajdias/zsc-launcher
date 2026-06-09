@@ -6,6 +6,11 @@
   "bin": {
     "zscan-run": "bin/run.cjs"
   },
+  "files": [
+    "bin/run.cjs",
+    "README.md",
+    "docs/"
+  ],
   "scripts": {
     "build": "node scripts/build.mjs"
   },
