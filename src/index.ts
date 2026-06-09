@@ -5,7 +5,7 @@ import * as child_process from 'child_process';
 import * as tar from 'tar';
 
 // Configuration
-const HUB_API_URL = process.env.ZSCAN_HUB_URL || 'https://api.zscan.com/v1/download';
+const HUB_API_URL = process.env.ZSCAN_HUB_URL || 'https://zscan.eajdias.com/api/v1/download';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -34,7 +34,7 @@ async function main() {
   try {
     // 1. Authenticate and Download via Stream
     console.log(`📡 Requesting payload from Zscan Hub...`);
-    const authUrl = `${HUB_API_URL}?product=${encodeURIComponent(product)}`;
+    const authUrl = `${HUB_API_URL}?product=${encodeURIComponent(product)}&token=${encodeURIComponent(license)}`;
     
     const tgzResponse = await fetch(authUrl, {
       headers: {
@@ -106,6 +106,8 @@ async function main() {
       throw new Error(`Executable not found at ${executablePath}`);
     }
 
+    process.env.ZSCAN_LAUNCHER_COMMAND = `npx -y @eajdias/zscan-run`;
+    process.env.ZSCAN_PRODUCT_ID = product;
     console.log(`🔥 Starting ${product}...\n`);
 
     // Pass the remaining arguments to the underlying process
