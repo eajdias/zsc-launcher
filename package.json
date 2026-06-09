@@ -1,6 +1,6 @@
 {
   "name": "@eajdias/zscan-run",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Zscan Generic Public Launcher",
   "main": "bin/run.cjs",
   "bin": {
