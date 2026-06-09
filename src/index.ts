@@ -114,8 +114,6 @@ async function main() {
     const childArgs = args.slice(1);
     
     // Environment Variable Handling
-    // As a generic launcher, we default to passing the full process.env so any product works natively.
-    // For strict security, users can define ZSCAN_FORWARD_ENV="VAR1,VAR2" to explicitly allowlist vars.
     let childEnv = process.env;
 
     if (process.env.ZSCAN_FORWARD_ENV) {
@@ -133,7 +131,6 @@ async function main() {
         }
       }
 
-      // Always forward ZSCAN_ prefixed configuration variables
       for (const key in process.env) {
         if (key.startsWith('ZSCAN_') && !safeEnv[key]) {
           safeEnv[key] = process.env[key];
@@ -143,19 +140,24 @@ async function main() {
       childEnv = safeEnv as NodeJS.ProcessEnv;
     }
 
-    child_process.execSync(`node "${executablePath}" ${childArgs.join(' ')}`, {
+    const result = child_process.spawnSync('node', [executablePath, ...childArgs], {
       stdio: 'inherit',
-      env: childEnv
+      env: childEnv,
+      shell: process.platform === 'win32' // Use shell on Windows for better compatibility
     });
 
-    // Note: We don't automatically clean up the temp dir immediately if the process is meant to stay alive
-    // as a server. If execSync blocks (like a server), it will stay here. 
-    // Once it exits, we could clean it up.
-    
+    if (result.error) {
+      throw result.error;
+    }
+
     try {
       fs.rmSync(extractDir, { recursive: true, force: true });
     } catch (e) {
       // Ignore cleanup errors
+    }
+
+    if (result.status !== null && result.status !== 0) {
+      process.exit(result.status);
     }
 
   } catch (error: any) {
